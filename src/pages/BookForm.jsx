@@ -68,24 +68,49 @@ const BookForm = () => {
 
   return (
     <main>
-      <button onClick={() => navigate(-1)}>← 뒤로 가기</button>
-      <h1>{isEdit ? '책 수정' : '책 추가'}</h1>
-      {submitError && <p style={{ color: 'red' }}>{submitError}</p>}
-      <form onSubmit={handleSubmit}>
-        <Input label="제목" id="title" value={form.title} onChange={handleChange} error={errors.title} placeholder="책 제목을 입력하세요" />
-        <Input label="저자" id="author" value={form.author} onChange={handleChange} error={errors.author} placeholder="저자를 입력하세요" />
-        <div>
-          <label htmlFor="status">독서 상태</label>
-          <select id="status" value={form.status} onChange={handleChange}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <Input label="평점 (1~5)" id="rating" type="number" value={form.rating} onChange={handleChange} placeholder="선택사항" />
-        <Input label="메모" id="memo" value={form.memo} onChange={handleChange} placeholder="선택사항" />
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '저장 중...' : '저장하기'}
-        </Button>
-      </form>
+      <button
+        onClick={() => navigate(-1)}
+        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.875rem', padding: 0, marginBottom: '16px', cursor: 'pointer' }}
+      >
+        ← 뒤로 가기
+      </button>
+
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '32px', maxWidth: '520px' }}>
+        <h1 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '24px' }}>{isEdit ? '책 수정' : '책 추가'}</h1>
+
+        {submitError && (
+          <p style={{ color: 'var(--danger)', fontSize: '0.875rem', background: '#fef2f2', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px' }}>
+            {submitError}
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <Input label="제목 *" id="title" value={form.title} onChange={handleChange} error={errors.title} placeholder="책 제목을 입력하세요" />
+          <Input label="저자 *" id="author" value={form.author} onChange={handleChange} error={errors.author} placeholder="저자를 입력하세요" />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '16px' }}>
+            <label htmlFor="status" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-heading)' }}>독서 상태</label>
+            <select
+              id="status"
+              value={form.status}
+              onChange={handleChange}
+              style={{ padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: '8px', fontSize: '0.95rem', fontFamily: 'inherit', background: 'var(--surface)', outline: 'none' }}
+            >
+              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <Input label="평점 (1~5)" id="rating" type="number" value={form.rating} onChange={handleChange} placeholder="선택사항" />
+          <Input label="메모" id="memo" value={form.memo} onChange={handleChange} placeholder="한 줄 감상을 남겨보세요 (선택사항)" />
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? '저장 중...' : '저장하기'}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => navigate(-1)}>취소</Button>
+          </div>
+        </form>
+      </div>
     </main>
   )
 }
