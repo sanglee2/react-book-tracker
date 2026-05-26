@@ -24,7 +24,8 @@ const BookList = () => {
           <Card
             key={book.id}
             title={book.title}
-            description={`${book.author} · ${book.status}`}
+            description={book.author}
+            status={book.status}
             onClick={() => navigate(`/books/${book.id}`)}
           />
         ))}

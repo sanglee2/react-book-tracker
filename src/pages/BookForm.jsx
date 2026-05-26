@@ -14,6 +14,7 @@ const BookForm = () => {
 
   const [form, setForm] = useState({ title: '', author: '', status: '읽고 싶음', rating: '', memo: '' })
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState(null)
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -21,7 +22,7 @@ const BookForm = () => {
     if (!isEdit) return
     const fetchBook = async () => {
       const { data, error } = await supabase.from('books').select('*').eq('id', id).single()
-      if (error) return alert('책 정보를 불러오지 못했습니다.')
+      if (error) { setSubmitError('책 정보를 불러오지 못했습니다.'); setIsLoading(false); return }
       setForm({ title: data.title, author: data.author, status: data.status, rating: data.rating ?? '', memo: data.memo ?? '' })
       setIsLoading(false)
     }
@@ -45,6 +46,7 @@ const BookForm = () => {
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
     setIsSubmitting(true)
     setErrors({})
+    setSubmitError(null)
 
     const payload = {
       title: form.title.trim(),
@@ -58,7 +60,7 @@ const BookForm = () => {
       ? await supabase.from('books').update(payload).eq('id', id)
       : await supabase.from('books').insert(payload)
 
-    if (error) { alert('저장 실패: ' + error.message); setIsSubmitting(false); return }
+    if (error) { setSubmitError('저장 실패: ' + error.message); setIsSubmitting(false); return }
     navigate(isEdit ? `/books/${id}` : '/books')
   }
 
@@ -68,6 +70,7 @@ const BookForm = () => {
     <main>
       <button onClick={() => navigate(-1)}>← 뒤로 가기</button>
       <h1>{isEdit ? '책 수정' : '책 추가'}</h1>
+      {submitError && <p style={{ color: 'red' }}>{submitError}</p>}
       <form onSubmit={handleSubmit}>
         <Input label="제목" id="title" value={form.title} onChange={handleChange} error={errors.title} placeholder="책 제목을 입력하세요" />
         <Input label="저자" id="author" value={form.author} onChange={handleChange} error={errors.author} placeholder="저자를 입력하세요" />
