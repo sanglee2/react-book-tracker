@@ -1,0 +1,90 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import Input from '../components/Input'
+import Button from '../components/Button'
+import Loading from '../components/Loading'
+
+const STATUS_OPTIONS = ['읽고 싶음', '읽는 중', '다 읽음']
+
+const BookForm = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const isEdit = Boolean(id)
+
+  const [form, setForm] = useState({ title: '', author: '', status: '읽고 싶음', rating: '', memo: '' })
+  const [errors, setErrors] = useState({})
+  const [isLoading, setIsLoading] = useState(isEdit)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!isEdit) return
+    const fetchBook = async () => {
+      const { data, error } = await supabase.from('books').select('*').eq('id', id).single()
+      if (error) return alert('책 정보를 불러오지 못했습니다.')
+      setForm({ title: data.title, author: data.author, status: data.status, rating: data.rating ?? '', memo: data.memo ?? '' })
+      setIsLoading(false)
+    }
+    fetchBook()
+  }, [id, isEdit])
+
+  const validate = () => {
+    const newErrors = {}
+    if (!form.title.trim()) newErrors.title = '제목을 입력해주세요.'
+    if (!form.author.trim()) newErrors.author = '저자를 입력해주세요.'
+    return newErrors
+  }
+
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.id]: e.target.value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const newErrors = validate()
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
+    setIsSubmitting(true)
+    setErrors({})
+
+    const payload = {
+      title: form.title.trim(),
+      author: form.author.trim(),
+      status: form.status,
+      rating: form.rating ? Number(form.rating) : null,
+      memo: form.memo.trim() || null,
+    }
+
+    const { error } = isEdit
+      ? await supabase.from('books').update(payload).eq('id', id)
+      : await supabase.from('books').insert(payload)
+
+    if (error) { alert('저장 실패: ' + error.message); setIsSubmitting(false); return }
+    navigate(isEdit ? `/books/${id}` : '/books')
+  }
+
+  if (isLoading) return <Loading />
+
+  return (
+    <main>
+      <button onClick={() => navigate(-1)}>← 뒤로 가기</button>
+      <h1>{isEdit ? '책 수정' : '책 추가'}</h1>
+      <form onSubmit={handleSubmit}>
+        <Input label="제목" id="title" value={form.title} onChange={handleChange} error={errors.title} placeholder="책 제목을 입력하세요" />
+        <Input label="저자" id="author" value={form.author} onChange={handleChange} error={errors.author} placeholder="저자를 입력하세요" />
+        <div>
+          <label htmlFor="status">독서 상태</label>
+          <select id="status" value={form.status} onChange={handleChange}>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <Input label="평점 (1~5)" id="rating" type="number" value={form.rating} onChange={handleChange} placeholder="선택사항" />
+        <Input label="메모" id="memo" value={form.memo} onChange={handleChange} placeholder="선택사항" />
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? '저장 중...' : '저장하기'}
+        </Button>
+      </form>
+    </main>
+  )
+}
+
+export default BookForm
